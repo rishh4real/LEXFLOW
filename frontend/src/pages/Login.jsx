@@ -54,6 +54,30 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      <div className="login-live-bg" aria-hidden="true">
+        <div className="case-thread thread-a" />
+        <div className="case-thread thread-b" />
+        <div className="case-thread thread-c" />
+        <div className="intel-panel panel-a">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="intel-panel panel-b">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="intel-panel panel-c">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="signal-node node-a" />
+        <div className="signal-node node-b" />
+        <div className="signal-node node-c" />
+        <div className="signal-node node-d" />
+      </div>
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
