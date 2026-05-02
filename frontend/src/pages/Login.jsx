@@ -53,8 +53,11 @@ export default function Login() {
   const fillDemo = (email, password) => setForm({ email, password });
 
   return (
-    <div className="login-page">
+    <div className="login-page animate-in">
       <div className="login-live-bg" aria-hidden="true">
+        <div className="bg-orb orb-a" />
+        <div className="bg-orb orb-b" />
+        <div className="bg-orb orb-c" />
         <div className="case-thread thread-a" />
         <div className="case-thread thread-b" />
         <div className="case-thread thread-c" />
@@ -79,7 +82,8 @@ export default function Login() {
         <div className="signal-node node-d" />
       </div>
 
-      <div className="login-card">
+      <div className="login-card animate-in">
+
         {/* Logo */}
         <div className="login-logo">
           <div className="logo-icon">
@@ -92,7 +96,7 @@ export default function Login() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="login-form" id="login-form">
+        <form onSubmit={handleSubmit} className="login-form animate-in delay-1" id="login-form">
           <div className="input-group">
             <label htmlFor="email" className="input-label">Email</label>
             <div className="input-wrapper">
@@ -153,7 +157,7 @@ export default function Login() {
         </form>
 
         {/* Demo credentials quick-fill */}
-        <div className="demo-section">
+        <div className="demo-section animate-in delay-2">
           <p className="demo-label">Demo accounts</p>
           <div className="demo-pills">
             {DEMO_CREDS.map(({ role, email, password }) => (

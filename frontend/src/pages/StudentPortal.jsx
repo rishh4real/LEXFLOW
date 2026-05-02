@@ -96,10 +96,10 @@ export default function StudentPortal() {
     : null;
 
   return (
-    <div className="page-layout">
+    <div className="page-layout animate-in">
       <Navbar />
 
-      <div className="student-layout">
+      <div className="student-layout animate-in delay-1">
         {/* ── Left sidebar: case list ──────────────────────────────────────── */}
         <aside className="case-sidebar">
           <div className="sidebar-header">

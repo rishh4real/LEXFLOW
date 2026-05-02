@@ -51,9 +51,9 @@ export default function CaseDetail() {
   const pdfUrl = c.pdf_path ? `${API_BASE}/${c.pdf_path}` : null;
 
   return (
-    <div className="page-layout">
+    <div className="page-layout animate-in">
       <Navbar />
-      <div className="case-detail-layout">
+      <div className="case-detail-layout animate-in delay-1">
         {/* Left info panel */}
         <div className="case-detail-info">
           <button className="back-btn" onClick={() => navigate(-1)}>

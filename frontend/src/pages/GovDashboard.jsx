@@ -61,10 +61,10 @@ export default function GovDashboard() {
   };
 
   return (
-    <div className="page-layout">
+    <div className="page-layout animate-in">
       <Navbar />
 
-      <div className="dashboard-page">
+      <div className="dashboard-page animate-in delay-1">
         {/* Page header */}
         <div className="page-header">
           <div>

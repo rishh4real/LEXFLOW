@@ -34,7 +34,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="navbar">
+    <nav className="navbar animate-in delay-1">
       {/* Brand */}
       <Link to="/" className="navbar-brand">
         <div className="brand-icon">

@@ -53,12 +53,14 @@ export default function AdminPanel() {
   const copyCode = () => navigator.clipboard.writeText(inviteCode);
 
   return (
-    <div className="page-layout">
+    <div className="page-layout animate-in">
       <Navbar />
-      <div className="admin-page">
+      <div className="admin-page animate-in delay-1">
         <div className="page-header">
-          <h1 className="page-title">Admin Panel</h1>
-          <p className="page-subtitle">Review flagged cases and manage user access</p>
+          <div className="page-header-copy">
+            <h1 className="page-title">Admin Panel</h1>
+            <p className="page-subtitle">Review flagged cases and manage user access</p>
+          </div>
         </div>
 
         {/* Tab bar */}
