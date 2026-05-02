@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import UrgencyBadge from './UrgencyBadge';
 import { FileText, Building2, Calendar, ArrowRight } from 'lucide-react';
 
-export default function CaseCard({ case: c, linkTo, role = 'official' }) {
+export default function CaseCard({ case: c, linkTo }) {
   const navigate = useNavigate();
 
   const handleClick = () => {

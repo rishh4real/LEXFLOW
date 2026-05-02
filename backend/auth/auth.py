@@ -4,7 +4,7 @@ auth/auth.py
 JWT authentication for LexFlow.
 - Creates access tokens with role + user_id embedded
 - Provides FastAPI dependency `get_current_user` used in route guards
-- Passwords hashed with bcrypt via passlib
+- Passwords hashed with bcrypt
 """
 
 import os

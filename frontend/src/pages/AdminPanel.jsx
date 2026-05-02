@@ -19,16 +19,16 @@ export default function AdminPanel() {
   const [generatingCode, setGeneratingCode] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
 
-  useEffect(() => { fetchFlagged(); }, []);
-
-  const fetchFlagged = async () => {
+  async function fetchFlagged() {
     setLoading(true);
     try {
       const { data } = await client.get('/verify/flagged');
       setFlagged(data);
     } catch { /* empty */ }
     finally { setLoading(false); }
-  };
+  }
+
+  useEffect(() => { fetchFlagged(); }, []);
 
   const handleVerify = async (caseId, action) => {
     setActionLoading(prev => ({ ...prev, [caseId]: true }));

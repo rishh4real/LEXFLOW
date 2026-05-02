@@ -7,14 +7,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Search, Filter, Loader2, RefreshCw } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Search, Loader2, RefreshCw } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import CaseCard from '../components/CaseCard';
 import client from '../api/client';
 
 export default function GovDashboard() {
-  const navigate = useNavigate();
   const [cases, setCases] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,11 +20,7 @@ export default function GovDashboard() {
   const [deptFilter, setDeptFilter] = useState('');
   const [urgencyFilter, setUrgencyFilter] = useState('');
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
-
-  const fetchAll = async () => {
+  async function fetchAll() {
     setLoading(true);
     try {
       const [casesRes, deptsRes] = await Promise.all([
@@ -40,7 +34,11 @@ export default function GovDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
 
   // Client-side filter for instant search UX
   const filtered = cases.filter((c) => {
@@ -149,7 +147,6 @@ export default function GovDashboard() {
                 key={c.id}
                 case={c}
                 linkTo={`/dashboard/case/${c.id}`}
-                role="official"
               />
             ))}
           </div>

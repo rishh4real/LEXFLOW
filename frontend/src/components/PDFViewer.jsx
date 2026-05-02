@@ -9,7 +9,7 @@
  *  - Highlight overlay for source-referenced sentences
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -22,17 +22,14 @@ export default function PDFViewer({ pdfUrl, highlightPage = null }) {
   const [numPages, setNumPages] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [scale, setScale] = useState(1.2);
-  const [loading, setLoading] = useState(true);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }) => {
     setNumPages(numPages);
-    setLoading(false);
   }, []);
 
-  // Jump to highlighted page when source reference is clicked
-  if (highlightPage && highlightPage !== currentPage) {
-    setCurrentPage(highlightPage);
-  }
+  useEffect(() => {
+    if (highlightPage) setCurrentPage(highlightPage);
+  }, [highlightPage]);
 
   return (
     <div className="pdf-viewer">

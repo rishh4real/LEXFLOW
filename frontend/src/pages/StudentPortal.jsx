@@ -30,12 +30,7 @@ export default function StudentPortal() {
   const [loadingCases, setLoadingCases] = useState(true);
   const [error, setError] = useState('');
 
-  // Load student's cases on mount
-  useEffect(() => {
-    fetchCases();
-  }, []);
-
-  const fetchCases = async () => {
+  async function fetchCases() {
     setLoadingCases(true);
     try {
       const { data } = await client.get('/cases/');
@@ -45,7 +40,12 @@ export default function StudentPortal() {
     } finally {
       setLoadingCases(false);
     }
-  };
+  }
+
+  // Load student's cases on mount
+  useEffect(() => {
+    fetchCases();
+  }, []);
 
   // When a case is selected, load its questions
   const selectCase = async (c) => {
@@ -86,7 +86,7 @@ export default function StudentPortal() {
   };
 
   // After quiz submitted, optionally jump PDF to a source page
-  const handleQuizSubmitted = (result) => {
+  const handleQuizSubmitted = () => {
     // In Phase 6 we map source references to page numbers
     // For now: no page jump
   };
