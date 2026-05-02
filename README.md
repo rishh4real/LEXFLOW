@@ -1,11 +1,4 @@
-<div align="center">
-  <img src="./lexflow_logo.png" alt="LexFlow Transparent Logo" width="300"/>
-  <h1>⚖️ <strong>LexFlow</strong></h1>
-  <p><strong>AI-Powered Court Judgment Intelligence</strong></p>
-  <p><em>From Judgment to Action — ensuring every court order is seen, verified, and acted upon.</em></p>
-</div>
 
----
 
 ## ⚖️ About LexFlow
 **LexFlow** is an AI-powered court judgment intelligence system built for the **AI for Bharat Hackathon — Theme 11**. It automatically reads High Court judgment PDFs from CCMS, extracts critical directives, generates structured action plans, verifies them through a blind human-in-the-loop mechanism, and presents only trusted data to government officials on a clean dashboard.
