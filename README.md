@@ -82,7 +82,7 @@ lexflow/
 | **AI Model** | Groq API (llama-3.3-70b-versatile) |
 | **PDF Engine** | pdfplumber, pytesseract (OCR) |
 | **Matching** | thefuzz (Fuzzy string matching) |
-| **Frontend** | React + Vite, Vanilla CSS |
+| **Frontend** | React + Vite, Tailwind CSS |
 | **State** | Zustand |
 
 ---
