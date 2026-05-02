@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="./lexflow_logo.png" alt="LexFlow Logo" width="300"/>
-  <h1>⚖️ LexFlow</h1>
-  <p><strong>From Judgment to Action</strong></p>
-  <p><em>Ensuring No Court Order Goes Unnoticed, Unverified, or Unacted Upon.</em></p>
+  <img src="./lexflow_logo.png" alt="LexFlow Transparent Logo" width="300"/>
+  <h1>⚖️ <strong>LexFlow</strong></h1>
+  <p><strong>AI-Powered Court Judgment Intelligence</strong></p>
+  <p><em>From Judgment to Action — ensuring every court order is seen, verified, and acted upon.</em></p>
 </div>
 
 ---
