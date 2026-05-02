@@ -14,6 +14,12 @@
 **Team commitNpray** — We build fast, adapt instantly, and turn chaos into working solutions. We don't wait for perfection — we commit, iterate, and sometimes... pray. 🙏
 
 ---
+👥 Team Members
+Shaurya Sharma -- Teach lead + Team lead [ rishhhsharmaaa@gmail.com]
+Aatifa Aftab -- Quality Assurance + Prototype Designer [atikaa@student.iul.ac.in]
+Mayank choudhary -- Quality Assurance + Support Developer [mayanknst2028@gmail.com]
+
+---
 
 ## 🚨 The Problem
 Every day, High Courts across India dispose of cases involving government departments. Each judgment contains critical directives — compliance orders, appeal deadlines, departmental responsibilities — requiring immediate administrative action.
