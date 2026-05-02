@@ -3,12 +3,12 @@ services/llm_service.py
 Claude API calls for extraction and action plan generation.
 """
 import os, json
-import anthropic
+from groq import Groq
 from dotenv import load_dotenv
 load_dotenv()
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-MODEL = "claude-sonnet-4-5"
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+MODEL = "llama-3.3-70b-versatile"
 
 EXTRACTION_PROMPT = """You are a legal AI. Extract structured data from this court judgment.
 Return ONLY valid JSON with these exact fields:
@@ -35,16 +35,15 @@ Court judgment text:
 """
 
 def extract_case(text: str) -> dict:
-    """Send PDF text to Claude and get structured extraction back."""
-    message = client.messages.create(
+    """Send PDF text to Groq and get structured extraction back."""
+    response = client.chat.completions.create(
         model=MODEL,
-        max_tokens=2048,
-        messages=[{"role": "user", "content": EXTRACTION_PROMPT + text[:12000]}]
+        messages=[
+            {"role": "system", "content": "You are a legal document analyst. Always respond in valid JSON only."},
+            {"role": "user", "content": EXTRACTION_PROMPT + text[:12000]}
+        ],
+        temperature=0.1,
+        response_format={"type": "json_object"}
     )
-    raw = message.content[0].text.strip()
-    # Strip markdown code fences if present
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    return json.loads(raw.strip())
+    raw = response.choices[0].message.content.strip()
+    return json.loads(raw)

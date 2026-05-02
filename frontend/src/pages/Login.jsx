@@ -78,6 +78,7 @@ export default function Login() {
         <div className="signal-node node-c" />
         <div className="signal-node node-d" />
       </div>
+
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">

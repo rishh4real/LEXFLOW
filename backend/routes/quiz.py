@@ -15,46 +15,9 @@ from pydantic import BaseModel
 from database.db import get_connection
 from auth.auth import get_current_user
 from auth.roles import require_student
+from services.confidence import score_answers
 
 router = APIRouter(prefix="/quiz", tags=["Quiz"])
-
-
-# ── Mock questions (Phase 1 placeholder) ──────────────────────────────────────
-MOCK_QUESTIONS = [
-    {
-        "id": 1,
-        "question_order": 1,
-        "question_text": "What is the final order — compliance or dismissed?",
-    },
-    {
-        "id": 2,
-        "question_order": 2,
-        "question_text": "Which department or authority must act?",
-    },
-    {
-        "id": 3,
-        "question_order": 3,
-        "question_text": "What is the compliance deadline mentioned in the judgment?",
-    },
-    {
-        "id": 4,
-        "question_order": 4,
-        "question_text": "Is there a limitation period for appeal? If yes, what is it?",
-    },
-    {
-        "id": 5,
-        "question_order": 5,
-        "question_text": "What is the key directive of the court in one line?",
-    },
-]
-
-MOCK_ANSWERS = {
-    1: "Compliance — respondent must act",
-    2: "Public Works Department, Maharashtra",
-    3: "90 days from date of order (2025-02-15)",
-    4: "Yes, 30 days from date of order",
-    5: "Install potable water supply in village XYZ within 90 days",
-}
 
 
 # ── Request body schema ───────────────────────────────────────────────────────
@@ -93,8 +56,7 @@ def get_questions(case_id: int, current_user: dict = Depends(get_current_user)):
     if rows:
         return [dict(r) for r in rows]
 
-    # Phase 1: return mock questions
-    return MOCK_QUESTIONS
+    return []
 
 
 # ── Submit Answers ────────────────────────────────────────────────────────────
@@ -121,23 +83,23 @@ def submit_answers(
         conn.close()
         raise HTTPException(status_code=400, detail="Quiz already submitted for this case.")
 
-    # ── Phase 1 mock scoring ──────────────────────────────────────────────────
-    correct = 0
-    breakdown = []
-    for q_id, student_ans in body.answers.items():
-        ai_ans = MOCK_ANSWERS.get(int(q_id), "")
-        # Simple case-insensitive match for Phase 1
-        is_match = student_ans.strip().lower() == ai_ans.lower()
-        if is_match:
-            correct += 1
-        breakdown.append({
-            "question_id": q_id,
-            "student_answer": student_ans,
-            "match": is_match,
-        })
+    # Fetch correct AI answers from DB
+    questions = conn.execute(
+        "SELECT id, correct_answer FROM quiz_questions WHERE case_id = ?",
+        (case_id,)
+    ).fetchall()
+    
+    if not questions:
+        conn.close()
+        raise HTTPException(status_code=400, detail="No questions found for this case.")
+        
+    ai_answers = {q["id"]: q["correct_answer"] for q in questions}
 
-    match_score = (correct / len(MOCK_ANSWERS)) * 100
-    submission_status = "approved" if match_score >= 80 else "flagged"
+    # Score answers
+    scoring_result = score_answers(body.answers, ai_answers)
+    match_score = scoring_result["match_score"]
+    submission_status = scoring_result["status"]
+    breakdown = scoring_result["breakdown"]
 
     # Save submission
     conn.execute(
@@ -190,7 +152,12 @@ def get_result(case_id: int, current_user: dict = Depends(get_current_user)):
 
     result = dict(submission)
     result["answers"] = json.loads(result["answers_json"])
+    
     # Now reveal AI answers
-    result["ai_answers"] = MOCK_ANSWERS
+    questions = conn.execute(
+        "SELECT id, correct_answer FROM quiz_questions WHERE case_id = ?",
+        (case_id,)
+    ).fetchall()
+    result["ai_answers"] = {q["id"]: q["correct_answer"] for q in questions}
 
     return result

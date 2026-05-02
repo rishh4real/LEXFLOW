@@ -16,27 +16,9 @@ from auth.auth import get_current_user
 router = APIRouter(prefix="/extract", tags=["Extraction"])
 
 
-# ── Mock extraction data (Phase 1 placeholder) ────────────────────────────────
-MOCK_EXTRACTION = {
-    "case_number": "WP/1234/2024",
-    "parties": "Ravi Kumar vs. State of Maharashtra",
-    "date_of_order": "2024-11-15",
-    "key_directions": "The respondent department must ensure installation of potable water supply within 90 days.",
-    "compliance_deadline": "2025-02-15",
-    "appeal_window": "30 days from date of order",
-    "responsible_department": "Public Works Department, Maharashtra",
-    "action_plan": {
-        "recommendation": "comply",
-        "urgency": "high",
-        "required_action": "Install water supply infrastructure in village XYZ within 90 days. File compliance report with court registry.",
-    },
-    "source_references": {
-        "compliance_deadline": "The respondent shall complete installation within a period of ninety (90) days from the date of this order.",
-        "responsible_department": "The Principal Secretary, Public Works Department is directed to personally supervise the project.",
-    },
-    "confidence_score": 0.91,
-}
-
+from services.pdf_parser import parse_pdf
+from services.llm_service import extract_case
+from services.quiz_service import generate_questions
 
 # ── Trigger Extraction ────────────────────────────────────────────────────────
 @router.post("/{case_id}")
@@ -62,11 +44,26 @@ def trigger_extraction(case_id: int, current_user: dict = Depends(get_current_us
         conn.close()
         return {"message": "Extraction already exists.", "case_id": case_id}
 
-    # ── TODO Phase 4: replace with real LLM call ──────────────────────────────
-    # from services.llm_service import extract_case
-    # result = extract_case(case["raw_text"])
-    result = MOCK_EXTRACTION
-    # ─────────────────────────────────────────────────────────────────────────
+    # Extract text from PDF
+    try:
+        pdf_data = parse_pdf(case["pdf_path"])
+        raw_text = pdf_data.get("full_text", "")
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"PDF Parsing failed: {str(e)}")
+
+    if len(raw_text.strip()) < 50:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Could not extract enough text from PDF.")
+
+    # Call LLM
+    try:
+        result = extract_case(raw_text)
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"AI extraction failed: {str(e)}")
+
+    result.setdefault("confidence_score", 0.90)
 
     # Store extraction in DB
     conn.execute(
@@ -99,6 +96,10 @@ def trigger_extraction(case_id: int, current_user: dict = Depends(get_current_us
     )
 
     conn.commit()
+
+    # Generate Quiz questions based on this new extraction
+    generate_questions(case_id, result)
+
     conn.close()
 
     return {"message": "Extraction complete.", "case_id": case_id, "data": result}

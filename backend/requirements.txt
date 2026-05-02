@@ -5,7 +5,7 @@ pdfplumber
 pytesseract
 Pillow
 pdf2image
-anthropic
+groq
 python-jose[cryptography]
 bcrypt
 thefuzz
