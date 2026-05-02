@@ -128,13 +128,13 @@ export default function StudentPortal() {
           <div className="case-list">
             {loadingCases ? (
               <div className="list-loading">
-                <Loader2 size={20} className="spin text-violet-400" />
+                <Loader2 size={20} className="spin text-neutral-400" />
                 <span>Loading cases…</span>
               </div>
             ) : cases.length === 0 ? (
               <div className="list-empty">
                 <p>No cases yet.</p>
-                <p className="text-sm text-slate-500">Upload a court PDF to get started.</p>
+                <p className="text-sm text-neutral-500">Upload a court PDF to get started.</p>
               </div>
             ) : (
               cases.map((c) => (

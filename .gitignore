@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+backend/lexflow.db
+backend/lexflow.db-*
+backend/uploads/
+frontend/dist/

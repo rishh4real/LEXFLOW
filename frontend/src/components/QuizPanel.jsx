@@ -5,7 +5,7 @@
  * Rules:
  *  - NO AI answers shown before submission
  *  - After submission: show score + AI answers side by side
- *  - Correct answers highlighted green, wrong ones red
+ *  - Correct and flagged answers use monochrome emphasis
  */
 
 import { useState } from 'react';
@@ -55,10 +55,10 @@ export default function QuizPanel({ caseId, questions, onSubmitted }) {
             <span className="score-label">Match</span>
           </div>
           <div className="score-status">
-            <h3 className={result.status === 'approved' ? 'text-emerald-400' : 'text-rose-400'}>
+            <h3 className={result.status === 'approved' ? 'text-white' : 'text-neutral-200'}>
               {result.status === 'approved' ? '✓ Approved' : '⚠ Flagged for Review'}
             </h3>
-            <p className="text-slate-400 text-sm">
+            <p className="text-neutral-400 text-sm">
               {result.status === 'approved'
                 ? 'Your answers matched the AI extraction. Case approved.'
                 : 'Low match score. This case has been sent to admin for review.'}
@@ -71,8 +71,8 @@ export default function QuizPanel({ caseId, questions, onSubmitted }) {
             <div key={i} className={`quiz-result-item ${item.match ? 'result-match' : 'result-mismatch'}`}>
               <div className="result-icon">
                 {item.match
-                  ? <CheckCircle size={16} className="text-emerald-400" />
-                  : <XCircle size={16} className="text-rose-400" />}
+                  ? <CheckCircle size={16} className="text-white" />
+                  : <XCircle size={16} className="text-white" />}
               </div>
               <div className="result-content">
                 <p className="result-question">{questions[i]?.question_text}</p>

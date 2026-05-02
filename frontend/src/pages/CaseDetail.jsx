@@ -32,14 +32,14 @@ export default function CaseDetail() {
 
   if (loading) return (
     <div className="page-layout"><Navbar />
-      <div className="page-loading"><Loader2 size={28} className="spin text-violet-400" /><p>Loading case…</p></div>
+      <div className="page-loading"><Loader2 size={28} className="spin text-neutral-400" /><p>Loading case…</p></div>
     </div>
   );
 
   if (error || !data) return (
     <div className="page-layout"><Navbar />
       <div className="page-empty">
-        <p className="text-rose-400">{error}</p>
+        <p className="text-white">{error}</p>
         <button className="back-btn" onClick={() => navigate(-1)}><ArrowLeft size={15} /> Back</button>
       </div>
     </div>

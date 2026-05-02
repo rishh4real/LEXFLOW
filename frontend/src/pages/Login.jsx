@@ -54,19 +54,14 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      {/* Animated background orbs */}
-      <div className="bg-orb bg-orb-1" />
-      <div className="bg-orb bg-orb-2" />
-      <div className="bg-orb bg-orb-3" />
-
       <div className="login-card">
         {/* Logo */}
         <div className="login-logo">
           <div className="logo-icon">
-            <Scale size={28} className="text-violet-300" />
+            <Scale size={28} className="text-neutral-200" />
           </div>
           <h1 className="login-title">
-            Lex<span className="text-violet-400">Flow</span>
+            Lex<span className="text-neutral-400">Flow</span>
           </h1>
           <p className="login-subtitle">AI-Powered Court Judgment Intelligence</p>
         </div>

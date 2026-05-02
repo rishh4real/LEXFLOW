@@ -73,7 +73,7 @@ export default function PDFViewer({ pdfUrl, highlightPage = null }) {
       <div className="pdf-scroll-area">
         {!pdfUrl ? (
           <div className="pdf-placeholder">
-            <FileText size={48} className="text-slate-600" />
+            <FileText size={48} className="text-neutral-600" />
             <p>No PDF loaded</p>
           </div>
         ) : (
@@ -88,7 +88,7 @@ export default function PDFViewer({ pdfUrl, highlightPage = null }) {
             }
             error={
               <div className="pdf-placeholder">
-                <p className="text-rose-400">Failed to load PDF.</p>
+                <p className="text-white">Failed to load PDF.</p>
               </div>
             }
           >

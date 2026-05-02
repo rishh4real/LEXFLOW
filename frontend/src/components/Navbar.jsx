@@ -16,9 +16,9 @@ const ROLE_LINKS = {
 };
 
 const ROLE_COLORS = {
-  admin:    'bg-rose-500/20 text-rose-300 border-rose-500/40',
-  student:  'bg-violet-500/20 text-violet-300 border-violet-500/40',
-  official: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  admin:    'bg-white text-black border-white',
+  student:  'bg-neutral-900 text-neutral-200 border-neutral-500',
+  official: 'bg-black text-white border-white',
 };
 
 export default function Navbar() {
@@ -38,7 +38,7 @@ export default function Navbar() {
       {/* Brand */}
       <Link to="/" className="navbar-brand">
         <div className="brand-icon">
-          <Scale size={18} className="text-violet-300" />
+          <Scale size={18} className="text-neutral-200" />
         </div>
         <span className="brand-name">
           Lex<span className="brand-accent">Flow</span>

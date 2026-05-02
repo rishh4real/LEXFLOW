@@ -85,12 +85,12 @@ export default function AdminPanel() {
           <div className="flagged-list">
             {loading ? (
               <div className="page-loading">
-                <Loader2 size={24} className="spin text-violet-400" />
+                <Loader2 size={24} className="spin text-neutral-400" />
                 <p>Loading flagged cases…</p>
               </div>
             ) : flagged.length === 0 ? (
               <div className="page-empty">
-                <CheckCircle size={36} className="text-emerald-400" />
+                <CheckCircle size={36} className="text-white" />
                 <p>No flagged cases. All clear!</p>
               </div>
             ) : (
@@ -145,7 +145,7 @@ export default function AdminPanel() {
           <div className="users-panel">
             <div className="invite-section">
               <h3 className="section-label">Generate Student Invite Code</h3>
-              <p className="text-slate-400 text-sm mb-4">
+              <p className="text-neutral-400 text-sm mb-4">
                 Share this code with a student so they can register.
               </p>
               <div className="invite-row">

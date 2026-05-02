@@ -135,7 +135,7 @@ export default function GovDashboard() {
         {/* Cases grid */}
         {loading ? (
           <div className="page-loading">
-            <Loader2 size={28} className="spin text-violet-400" />
+            <Loader2 size={28} className="spin text-neutral-400" />
             <p>Loading verified cases…</p>
           </div>
         ) : filtered.length === 0 ? (
