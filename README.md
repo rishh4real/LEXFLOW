@@ -15,8 +15,11 @@
 
 ---
 👥 Team Members
+
 Shaurya Sharma -- Teach lead + Team lead [ rishhhsharmaaa@gmail.com]
+
 Aatifa Aftab -- Quality Assurance + Prototype Designer [atikaa@student.iul.ac.in]
+
 Mayank choudhary -- Quality Assurance + Support Developer [mayanknst2028@gmail.com]
 
 ---
