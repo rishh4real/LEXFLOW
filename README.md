@@ -117,6 +117,19 @@ npm install
 npm run dev
 ```
 
+### One-Command Launch
+From the repository root:
+```bash
+chmod +x launch.sh
+./launch.sh
+```
+
+This script will:
+- create and activate the backend Python environment
+- install backend and frontend dependencies if needed
+- start the backend on `http://localhost:10000`
+- start the frontend on `http://localhost:5173`
+
 ---
 
 ## 👤 Test Accounts
