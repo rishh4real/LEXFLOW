@@ -161,36 +161,41 @@ To deploy the frontend on Firebase Hosting and backend on Cloud Run:
      }
    }
    ```
-4. Build the frontend:
+4. Set environment variables:
+   ```bash
+   export FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+   export GROQ_API_KEY=your_groq_api_key
+   export JWT_SECRET=your_jwt_secret
+   ```
+5. Run the deploy script from the repository root:
+   ```bash
+   chmod +x deploy_firebase.sh
+   ./deploy_firebase.sh
+   ```
+6. If you prefer manual deploy steps, use:
    ```bash
    cd frontend
    npm install
    npm run build
-   cd ..
-   ```
-5. Deploy the frontend to Firebase Hosting:
-   ```bash
    firebase deploy --only hosting
-   ```
-6. Deploy the backend to Cloud Run:
-   ```bash
-   cd backend
+
+   cd ../backend
    gcloud auth login
-   gcloud config set project YOUR_FIREBASE_PROJECT_ID
-   gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/lexflow-api
+   gcloud config set project "$FIREBASE_PROJECT_ID"
+   gcloud builds submit --tag gcr.io/$FIREBASE_PROJECT_ID/lexflow-api
    gcloud run deploy lexflow-api \
-     --image gcr.io/$GOOGLE_CLOUD_PROJECT/lexflow-api \
+     --image gcr.io/$FIREBASE_PROJECT_ID/lexflow-api \
      --platform managed \
      --region us-central1 \
      --allow-unauthenticated \
-     --set-env-vars GROQ_API_KEY=your_groq_api_key,JWT_SECRET=your_jwt_secret
+     --set-env-vars GROQ_API_KEY=$GROQ_API_KEY,JWT_SECRET=$JWT_SECRET
    ```
 7. In `firebase.json`, ensure the Cloud Run rewrite points to the service name `lexflow-api` and region `us-central1`.
 
 #### Notes
 - Frontend API calls are routed through `/api/...` when hosted on Firebase.
 - In local development, the app still uses `http://localhost:10000` for the backend.
-- Replace `YOUR_FIREBASE_PROJECT_ID` and environment values with your real project settings.
+- Replace `YOUR_FIREBASE_PROJECT_ID` and env values with your real project settings.
 
 ---
 
