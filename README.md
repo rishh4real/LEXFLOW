@@ -130,6 +130,25 @@ This script will:
 - start the backend on `http://localhost:10000`
 - start the frontend on `http://localhost:5173`
 
+### Docker Deployment
+If you want a containerized deployment, use Docker Compose.
+1. Copy `.env.example` to `.env` and update your keys:
+   ```bash
+   cp .env.example .env
+   ```
+2. Build and start both services:
+   ```bash
+   docker compose up --build -d
+   ```
+3. Visit:
+   - frontend: `http://localhost:5173`
+   - backend: `http://localhost:10000`
+
+To stop the containers:
+```bash
+docker compose down
+```
+
 ---
 
 ## 👤 Test Accounts
