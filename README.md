@@ -149,6 +149,49 @@ To stop the containers:
 docker compose down
 ```
 
+### Firebase + Cloud Run Deployment
+To deploy the frontend on Firebase Hosting and backend on Cloud Run:
+1. Install the Firebase CLI and Google Cloud SDK.
+2. Create or select a Firebase project.
+3. Set your Firebase project in `.firebaserc`:
+   ```json
+   {
+     "projects": {
+       "default": "YOUR_FIREBASE_PROJECT_ID"
+     }
+   }
+   ```
+4. Build the frontend:
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   cd ..
+   ```
+5. Deploy the frontend to Firebase Hosting:
+   ```bash
+   firebase deploy --only hosting
+   ```
+6. Deploy the backend to Cloud Run:
+   ```bash
+   cd backend
+   gcloud auth login
+   gcloud config set project YOUR_FIREBASE_PROJECT_ID
+   gcloud builds submit --tag gcr.io/$GOOGLE_CLOUD_PROJECT/lexflow-api
+   gcloud run deploy lexflow-api \
+     --image gcr.io/$GOOGLE_CLOUD_PROJECT/lexflow-api \
+     --platform managed \
+     --region us-central1 \
+     --allow-unauthenticated \
+     --set-env-vars GROQ_API_KEY=your_groq_api_key,JWT_SECRET=your_jwt_secret
+   ```
+7. In `firebase.json`, ensure the Cloud Run rewrite points to the service name `lexflow-api` and region `us-central1`.
+
+#### Notes
+- Frontend API calls are routed through `/api/...` when hosted on Firebase.
+- In local development, the app still uses `http://localhost:10000` for the backend.
+- Replace `YOUR_FIREBASE_PROJECT_ID` and environment values with your real project settings.
+
 ---
 
 ## 👤 Test Accounts
