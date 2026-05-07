@@ -35,10 +35,9 @@ async def upload_case(
 
     content = await file.read()
 
-    db = get_db()
-    fs = get_fs()
-
     try:
+        db = get_db()
+        fs = get_fs()
         file_id = await fs.upload_from_stream(filename, content, metadata={"contentType": "application/pdf"})
     except Exception:
         case_doc = local_store.create_case(filename, content, current_user["id"])
@@ -78,7 +77,6 @@ async def list_cases(current_user: dict = Depends(get_current_user)):
     """
     List cases from MongoDB based on role.
     """
-    db = get_db()
     role = current_user["role"]
 
     q: dict = {}
@@ -89,6 +87,7 @@ async def list_cases(current_user: dict = Depends(get_current_user)):
 
     results = []
     try:
+        db = get_db()
         async for doc in db.cases.find(q).sort("created_at", -1):
             d = dict(doc)
             d["id"] = str(d.pop("_id"))
