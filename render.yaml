@@ -12,6 +12,8 @@ services:
         sync: false
       - key: MONGODB_DB_NAME
         value: lexflow
+      - key: ENVIRONMENT
+        value: production
       - key: GROQ_API_KEY
         sync: false
       - key: JWT_SECRET

@@ -16,17 +16,36 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+MONGODB_URI_ENV_KEYS = ("MONGODB_URI", "MONGO_URI", "MONGODB_URL", "DATABASE_URL")
+
 _client: AsyncIOMotorClient | None = None
 _db: AsyncIOMotorDatabase | None = None
 _fs: AsyncIOMotorGridFSBucket | None = None
 
 
+def is_production_runtime() -> bool:
+    return os.getenv("ENVIRONMENT") == "production" or os.getenv("RENDER") == "true"
+
+
+def mongodb_uri_configured() -> bool:
+    return bool(get_mongodb_uri())
+
+
+def get_mongodb_uri() -> str | None:
+    for key in MONGODB_URI_ENV_KEYS:
+        value = os.getenv(key)
+        if value and value.strip():
+            return value.strip()
+    return None
+
+
 def get_client() -> AsyncIOMotorClient:
     global _client
     if _client is None:
-        uri = os.getenv("MONGODB_URI")
+        uri = get_mongodb_uri()
         if not uri:
-            raise RuntimeError("MONGODB_URI is not set")
+            keys = ", ".join(MONGODB_URI_ENV_KEYS)
+            raise RuntimeError(f"MongoDB URI is not set. Expected one of: {keys}")
         _client = AsyncIOMotorClient(
             uri,
             serverSelectionTimeoutMS=5000,

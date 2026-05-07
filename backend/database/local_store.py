@@ -144,14 +144,24 @@ def build_fallback_extraction(case_id: str, raw_text: str = "") -> dict:
     return extraction
 
 
-def create_questions(case_id: str, extraction: dict) -> list[dict]:
-    prompts = [
-        "What is the final order — compliance or dismissed?",
-        "Which department or authority must act?",
-        "What is the compliance deadline mentioned in the judgment?",
-        "Is there a limitation period for appeal? If yes, what is it?",
-        "What is the key directive of the court in one line?",
+def build_question_prompts(extraction: dict) -> list[str]:
+    case_label = extraction.get("case_number") or "this judgment"
+    parties = extraction.get("parties")
+    context = f"{case_label}"
+    if parties:
+        context = f"{case_label} ({parties})"
+
+    return [
+        f"For {context}, what is the final order: compliance or dismissed?",
+        f"For {context}, which department or authority must act?",
+        f"For {context}, what compliance deadline is mentioned in the judgment?",
+        f"For {context}, is there a limitation period for appeal? If yes, what is it?",
+        f"For {context}, what is the key court directive in one line?",
     ]
+
+
+def create_questions(case_id: str, extraction: dict) -> list[dict]:
+    prompts = build_question_prompts(extraction)
     ai_answers = [
         extraction.get("action_plan", {}).get("recommendation", ""),
         extraction.get("responsible_dept", ""),

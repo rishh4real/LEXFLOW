@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from database.mongo import get_db, ensure_indexes
+from database.mongo import get_db, ensure_indexes, mongodb_uri_configured
 from auth.auth import (
     authenticate_user,
     create_access_token,
@@ -237,6 +237,15 @@ def health():
 
 @app.get("/health/db", tags=["System"])
 async def health_db():
+    if not mongodb_uri_configured():
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "database": "unavailable",
+                "detail": "MongoDB URI env var is not visible to the backend process. Set MONGODB_URI on the Render backend web service and redeploy.",
+            },
+        )
     try:
         await get_db().command("ping")
         return {"status": "ok", "database": "connected"}

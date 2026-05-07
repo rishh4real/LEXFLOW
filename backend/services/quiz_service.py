@@ -6,17 +6,26 @@ from datetime import datetime
 
 from database.mongo import get_db
 
-QUESTIONS = [
-    "What is the final order — compliance or dismissed?",
-    "Which department or authority must act?",
-    "What is the compliance deadline mentioned in the judgment?",
-    "Is there a limitation period for appeal? If yes, what is it?",
-    "What is the key directive of the court in one line?",
-]
+def build_question_prompts(extraction: dict) -> list[str]:
+    """Build case-specific prompts so two uploaded cases do not show as one generic quiz."""
+    case_label = extraction.get("case_number") or "this judgment"
+    parties = extraction.get("parties")
+    context = f"{case_label}"
+    if parties:
+        context = f"{case_label} ({parties})"
+
+    return [
+        f"For {context}, what is the final order: compliance or dismissed?",
+        f"For {context}, which department or authority must act?",
+        f"For {context}, what compliance deadline is mentioned in the judgment?",
+        f"For {context}, is there a limitation period for appeal? If yes, what is it?",
+        f"For {context}, what is the key court directive in one line?",
+    ]
 
 async def generate_questions(case_id: str, extraction: dict) -> list:
     """Map extraction fields to 5 fixed questions and store with AI answers in MongoDB."""
     db = get_db()
+    prompts = build_question_prompts(extraction)
     ai_answers = [
         extraction.get("action_plan", {}).get("recommendation", ""),
         extraction.get("responsible_dept", ""),
@@ -31,7 +40,7 @@ async def generate_questions(case_id: str, extraction: dict) -> list:
     docs = []
     stored = []
     now = datetime.utcnow()
-    for i, (q, a) in enumerate(zip(QUESTIONS, ai_answers)):
+    for i, (q, a) in enumerate(zip(prompts, ai_answers)):
         docs.append(
             {
                 "case_id": case_id,

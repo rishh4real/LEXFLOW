@@ -13,7 +13,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from database import local_store
-from database.mongo import get_db, get_fs
+from database.mongo import get_db, get_fs, is_production_runtime
 from auth.auth import get_current_user
 from auth.roles import require_admin, require_student
 
@@ -39,7 +39,12 @@ async def upload_case(
         db = get_db()
         fs = get_fs()
         file_id = await fs.upload_from_stream(filename, content, metadata={"contentType": "application/pdf"})
-    except Exception:
+    except Exception as exc:
+        if is_production_runtime():
+            raise HTTPException(
+                status_code=503,
+                detail=f"Database storage is unavailable. Set MONGODB_URI in Render and redeploy. ({str(exc)})",
+            )
         case_doc = local_store.create_case(filename, content, current_user["id"])
         return {
             "case_id": case_doc["id"],
@@ -126,7 +131,12 @@ async def list_cases(current_user: dict = Depends(get_current_user)):
                     d.setdefault("urgency", ext["action_plan"].get("urgency"))
 
             results.append(d)
-    except Exception:
+    except Exception as exc:
+        if is_production_runtime():
+            raise HTTPException(
+                status_code=503,
+                detail=f"Database is unavailable. Set MONGODB_URI in Render and redeploy. ({str(exc)})",
+            )
         results = []
 
     # Also include local-store cases (fallback when MongoDB is down)

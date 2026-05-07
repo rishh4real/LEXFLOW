@@ -16,9 +16,7 @@ import Navbar from '../components/Navbar';
 import PDFViewer from '../components/PDFViewer';
 import QuizPanel from '../components/QuizPanel';
 import CaseCard from '../components/CaseCard';
-import client from '../api/client';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import client, { API_BASE } from '../api/client';
 
 export default function StudentPortal() {
   const [cases, setCases] = useState([]);

@@ -18,7 +18,7 @@ import bcrypt
 from dotenv import load_dotenv
 
 from bson import ObjectId
-from database.mongo import get_db
+from database.mongo import get_db, is_production_runtime
 
 load_dotenv()
 
@@ -118,6 +118,8 @@ async def authenticate_user(email: str, password: str) -> Optional[dict]:
         db = get_db()
         user_doc = await db.users.find_one({"email": email})
     except Exception:
+        if is_production_runtime():
+            return None
         demo = DEMO_USERS.get(email)
         if demo and demo["password"] == password:
             return {key: value for key, value in demo.items() if key != "password"}

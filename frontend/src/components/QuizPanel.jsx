@@ -8,7 +8,7 @@
  *  - Correct and flagged answers use monochrome emphasis
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Send, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import client from '../api/client';
 
@@ -17,6 +17,13 @@ export default function QuizPanel({ caseId, questions, onSubmitted }) {
   const [result, setResult] = useState(null);         // post-submission result
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setAnswers({});
+    setResult(null);
+    setError('');
+    setSubmitting(false);
+  }, [caseId]);
 
   const handleChange = (qId, value) => {
     setAnswers((prev) => ({ ...prev, [qId]: value }));

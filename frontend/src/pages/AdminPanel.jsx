@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Shield, Users, Loader2, CheckCircle, XCircle, Copy, Upload, FileText } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Shield, Users, Loader2, CheckCircle, XCircle, Copy, Upload, FileText, History, RefreshCw } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import client from '../api/client';
 
 export default function AdminPanel() {
   const [tab, setTab] = useState('flagged');
   const [flagged, setFlagged] = useState([]);
+  const [uploadedCases, setUploadedCases] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [inviteCode, setInviteCode] = useState('');
@@ -15,21 +16,26 @@ export default function AdminPanel() {
   const [extracting, setExtracting] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (tab === 'flagged') {
         const { data } = await client.get('/verify/flagged');
         setFlagged(data);
+      } else if (tab === 'history') {
+        const { data } = await client.get('/cases/');
+        setUploadedCases(data);
       } else if (tab === 'users') {
         const { data } = await client.get('/admin/users');
         setUsers(data);
       }
-    } catch { }
+    } catch (err) {
+      console.error('Failed to load admin data', err);
+    }
     finally { setLoading(false); }
-  }
+  }, [tab]);
 
-  useEffect(() => { fetchData(); }, [tab]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -45,8 +51,8 @@ export default function AdminPanel() {
       setUploading(false);
       setExtracting(true);
       await client.post(`/extract/${uploaded.case_id}`);
-      alert('Case uploaded and AI extraction started!');
-      setTab('flagged');
+      alert('Case uploaded and AI extraction completed!');
+      setTab('history');
     } catch (err) {
       // Prefer backend's error detail so the admin sees the real cause
       const detail =
@@ -66,7 +72,9 @@ export default function AdminPanel() {
     try {
       await client.post(`/verify/${caseId}`, { action });
       setFlagged(prev => prev.filter(c => c.id !== caseId));
-    } catch { }
+    } catch (err) {
+      console.error('Failed to verify case', err);
+    }
     finally { setActionLoading(prev => ({ ...prev, [caseId]: false })); }
   };
 
@@ -76,7 +84,9 @@ export default function AdminPanel() {
       const { data } = await client.post('/auth/invite');
       setInviteCode(data.invite_code);
       fetchData();
-    } catch { }
+    } catch (err) {
+      console.error('Failed to generate invite', err);
+    }
     finally { setGeneratingCode(false); }
   };
 
@@ -114,6 +124,10 @@ export default function AdminPanel() {
           <button className={`tab-btn ${tab === 'upload' ? 'tab-active' : ''}`} onClick={() => setTab('upload')}>
             <Upload size={15} /> Upload Case
           </button>
+          <button className={`tab-btn ${tab === 'history' ? 'tab-active' : ''}`} onClick={() => setTab('history')}>
+            <History size={15} /> Uploaded Cases
+            {uploadedCases.length > 0 && <span className="tab-badge">{uploadedCases.length}</span>}
+          </button>
           <button className={`tab-btn ${tab === 'users' ? 'tab-active' : ''}`} onClick={() => setTab('users')}>
             <Users size={15} /> Active Users
           </button>
@@ -143,6 +157,50 @@ export default function AdminPanel() {
               />
             </label>
             {uploadError && <p className="text-red-500 mt-4 text-xs font-bold">{uploadError}</p>}
+          </div>
+        )}
+
+        {/* ── Tab: Uploaded History ───────────────────────────────────────── */}
+        {tab === 'history' && (
+          <div className="history-panel">
+            <div className="history-toolbar">
+              <div>
+                <h2 className="history-title">Uploaded Cases</h2>
+                <p className="history-subtitle">Every judgment uploaded by admin appears here, including pending student quizzes.</p>
+              </div>
+              <button className="icon-btn" onClick={fetchData} title="Refresh uploads">
+                <RefreshCw size={15} />
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="page-loading"><Loader2 size={24} className="spin text-neutral-400" /></div>
+            ) : uploadedCases.length === 0 ? (
+              <div className="page-empty"><p>No uploaded cases yet.</p></div>
+            ) : (
+              <div className="history-list">
+                {uploadedCases.map((c) => (
+                  <div key={c.id} className="history-card">
+                    <div className="history-card-main">
+                      <div>
+                        <div className="case-number-pill">
+                          <FileText size={13} />
+                          <span>{c.case_number || `Case #${c.id}`}</span>
+                        </div>
+                        <h3>{c.parties || 'Parties not extracted yet'}</h3>
+                        <p>{c.key_directions || 'AI direction not extracted yet'}</p>
+                      </div>
+                      <span className={`status-chip status-${c.status}`}>{c.status?.toUpperCase() || 'PENDING'}</span>
+                    </div>
+                    <div className="history-meta">
+                      <span>Uploaded {c.created_at ? new Date(c.created_at).toLocaleString() : 'recently'}</span>
+                      <span>{c.responsible_dept || 'Department pending'}</span>
+                      <span>{c.compliance_deadline ? `Deadline ${c.compliance_deadline}` : 'Deadline pending'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -236,11 +294,11 @@ export default function AdminPanel() {
                 )}
 
                 <div className="flex gap-2 mt-6">
-                  <button onClick={() => handleVerify(c.id, 'approve')} className="bg-white text-black flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2">
-                    <CheckCircle size={14}/> Approve
+                  <button disabled={actionLoading[c.id]} onClick={() => handleVerify(c.id, 'approve')} className="bg-white text-black flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2">
+                    {actionLoading[c.id] ? <Loader2 size={14} className="spin" /> : <CheckCircle size={14}/>} Approve
                   </button>
-                  <button onClick={() => handleVerify(c.id, 'reject')} className="bg-black border border-white/20 text-white flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2">
-                    <XCircle size={14}/> Reject
+                  <button disabled={actionLoading[c.id]} onClick={() => handleVerify(c.id, 'reject')} className="bg-black border border-white/20 text-white flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2">
+                    {actionLoading[c.id] ? <Loader2 size={14} className="spin" /> : <XCircle size={14}/>} Reject
                   </button>
                 </div>
               </div>
