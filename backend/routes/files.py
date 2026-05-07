@@ -36,12 +36,11 @@ async def get_file(file_id: str):
         raise HTTPException(status_code=404, detail="File not found.")
 
     async def _iterfile():
-        while True:
-            # Motor GridFS uses read_chunk()
-            chunk = await grid_out.read_chunk()
-            if not chunk:
-                break
-            yield chunk
+        # Motor's read_chunk() can return an empty stream on some deployments.
+        # read() is reliable here and PDFs are already bounded by upload size.
+        data = await grid_out.read()
+        if data:
+            yield data
 
     filename = getattr(grid_out, "filename", "document.pdf") or "document.pdf"
     return StreamingResponse(
