@@ -114,8 +114,8 @@ async def authenticate_user(email: str, password: str) -> Optional[dict]:
     Look up user by email in MongoDB, verify password.
     Returns user data on success, None on failure.
     """
-    db = get_db()
     try:
+        db = get_db()
         user_doc = await db.users.find_one({"email": email})
     except Exception:
         demo = DEMO_USERS.get(email)
