@@ -36,8 +36,8 @@ async def list_flagged(current_user: dict = Depends(require_admin)):
     Includes the latest quiz submission scores for context.
     """
     results = []
-    db = get_db()
     try:
+        db = get_db()
         async for doc in db.cases.find({"status": "flagged"}).sort("created_at", -1):
             case_data = dict(doc)
             case_id = str(case_data.pop("_id"))

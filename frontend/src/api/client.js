@@ -18,7 +18,7 @@ const API_BASE =
 const client = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 8000,
+  timeout: 120000,
 });
 
 // ── Request interceptor: attach JWT token ─────────────────────────────────────
