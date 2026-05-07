@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, Loader2, CheckCircle, XCircle, Copy, Upload, Trash2 } from 'lucide-react';
+import { Shield, Users, Loader2, CheckCircle, XCircle, Copy, Upload, FileText } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import client from '../api/client';
 
@@ -80,6 +80,15 @@ export default function AdminPanel() {
     finally { setGeneratingCode(false); }
   };
 
+  const answerFor = (caseItem, question) => {
+    const breakdown = caseItem.submission?.breakdown || [];
+    const match = breakdown.find((item) => item.question_id === question.id);
+    const studentAnswer = match?.student_answer || caseItem.submission?.answers?.[question.id] || 'No answer submitted';
+    const aiAnswer = match?.ai_answer || question.correct_answer || 'No AI answer available';
+    const score = typeof match?.score === 'number' ? match.score : null;
+    return { studentAnswer, aiAnswer, score, matched: match?.match };
+  };
+
   return (
     <div className="page-layout animate-in">
       <Navbar />
@@ -154,6 +163,65 @@ export default function AdminPanel() {
                     </span>
                   </div>
                 </div>
+
+                <div className="admin-review-summary">
+                  <div>
+                    <span className="admin-review-label">Parties</span>
+                    <p>{c.parties || 'Not extracted'}</p>
+                  </div>
+                  <div>
+                    <span className="admin-review-label">Department</span>
+                    <p>{c.responsible_dept || 'Not extracted'}</p>
+                  </div>
+                  <div>
+                    <span className="admin-review-label">Deadline</span>
+                    <p>{c.compliance_deadline || 'Not extracted'}</p>
+                  </div>
+                  <div>
+                    <span className="admin-review-label">AI Direction</span>
+                    <p>{c.key_directions || 'Not extracted'}</p>
+                  </div>
+                </div>
+
+                {c.submission ? (
+                  <div className="admin-answer-review">
+                    <div className="admin-answer-title">
+                      <FileText size={14} />
+                      Student vs AI Answers
+                    </div>
+                    {(c.questions || []).map((q) => {
+                      const answer = answerFor(c, q);
+                      return (
+                        <div key={q.id} className="admin-answer-row">
+                          <div className="admin-question-line">
+                            <span>Q{q.question_order}</span>
+                            <p>{q.question_text}</p>
+                            {answer.score !== null && (
+                              <b className={answer.matched ? 'answer-pass' : 'answer-fail'}>
+                                {answer.score}%
+                              </b>
+                            )}
+                          </div>
+                          <div className="answer-columns">
+                            <div>
+                              <label>Student answer</label>
+                              <p>{answer.studentAnswer}</p>
+                            </div>
+                            <div>
+                              <label>AI answer</label>
+                              <p>{answer.aiAnswer}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="admin-answer-empty">
+                    Student has not submitted the quiz yet. Keep this pending until answers arrive.
+                  </div>
+                )}
+
                 <div className="flex gap-2 mt-6">
                   <button onClick={() => handleVerify(c.id, 'approve')} className="bg-white text-black flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-2">
                     <CheckCircle size={14}/> Approve
