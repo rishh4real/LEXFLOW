@@ -82,12 +82,19 @@ export default function AdminPanel() {
 
   const answerFor = (caseItem, question) => {
     const breakdown = caseItem.submission?.breakdown || [];
-    const match = breakdown.find((item) => item.question_id === question.id);
-    const studentAnswer = match?.student_answer || caseItem.submission?.answers?.[question.id] || 'No answer submitted';
+    const match = breakdown.find((item) => item.question_id === question.id || item.question_id === String(question.id));
+    const studentAnswer =
+      match?.student_answer ||
+      caseItem.submission?.answers?.[question.id] ||
+      caseItem.submission?.answers?.[String(question.id)] ||
+      'No answer submitted';
     const aiAnswer = match?.ai_answer || question.correct_answer || 'No AI answer available';
     const score = typeof match?.score === 'number' ? match.score : null;
     return { studentAnswer, aiAnswer, score, matched: match?.match };
   };
+
+  const hasStudentSubmission = (caseItem) =>
+    Boolean(caseItem.submission || caseItem.submitted_at || caseItem.student_name);
 
   return (
     <div className="page-layout animate-in">
@@ -183,13 +190,13 @@ export default function AdminPanel() {
                   </div>
                 </div>
 
-                {c.submission ? (
+                {hasStudentSubmission(c) ? (
                   <div className="admin-answer-review">
                     <div className="admin-answer-title">
                       <FileText size={14} />
                       Student vs AI Answers
                     </div>
-                    {(c.questions || []).map((q) => {
+                    {(c.questions || []).length > 0 ? (c.questions || []).map((q) => {
                       const answer = answerFor(c, q);
                       return (
                         <div key={q.id} className="admin-answer-row">
@@ -214,7 +221,13 @@ export default function AdminPanel() {
                           </div>
                         </div>
                       );
-                    })}
+                    }) : (
+                      <div className="admin-answer-row">
+                        <p className="text-xs text-neutral-400">
+                          Student submitted this quiz, but detailed question data is missing for this older record.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="admin-answer-empty">

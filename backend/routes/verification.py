@@ -18,6 +18,7 @@ from database import local_store
 from database.mongo import get_db
 from auth.auth import get_current_user
 from auth.roles import require_admin
+from services.confidence import score_answers
 
 router = APIRouter(prefix="/verify", tags=["Verification"])
 
@@ -89,6 +90,13 @@ async def list_flagged(current_user: dict = Depends(require_admin)):
                 q_data.pop("case_id", None)
                 questions.append(q_data)
             case_data["questions"] = questions
+
+            if case_data.get("submission") and not case_data["submission"].get("breakdown"):
+                ai_answers = {q["id"]: q.get("correct_answer", "") for q in questions}
+                scoring = score_answers(case_data["submission"].get("answers", {}), ai_answers)
+                case_data["submission"]["breakdown"] = scoring["breakdown"]
+                case_data["submission"]["match_score"] = scoring["match_score"]
+                case_data["match_score"] = scoring["match_score"]
 
             if case_data.get("created_at") and hasattr(case_data["created_at"], "isoformat"):
                 case_data["created_at"] = case_data["created_at"].isoformat()
