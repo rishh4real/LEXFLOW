@@ -5,3 +5,6 @@ backend/lexflow.db
 backend/lexflow.db-*
 backend/uploads/
 frontend/dist/
+*.log
+backend/serviceAccountKey.json
+backend/database/firebase_config.py

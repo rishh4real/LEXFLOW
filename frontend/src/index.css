@@ -42,6 +42,20 @@ body { background: var(--bg); color: var(--text); font-family: "Inter", sans-ser
   flex-direction: column;
   gap: 6px;
 }
+/* ── Marquee Animation ─────────────────────────────────────────────────────── */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
 
 /* Layout */
 .page-layout { min-height: 100vh; display: flex; flex-direction: column; }

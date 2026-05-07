@@ -6,13 +6,13 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Building2, Calendar, Clock3, Scale, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Building2, Calendar, Clock3, Scale, CheckCircle2, Download } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import PDFViewer from '../components/PDFViewer';
 import UrgencyBadge from '../components/UrgencyBadge';
 import client from '../api/client';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 const STATUS_STEPS = ['Pending', 'In Progress', 'Complied', 'Appeal Filed'];
 
 export default function CaseDetail() {
@@ -29,6 +29,23 @@ export default function CaseDetail() {
       .catch(() => setError('Failed to load case.'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await client.get(`/dashboard/cases/${id}/export`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `LexFlow_ActionPlan_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert('Failed to download PDF');
+    }
+  };
 
   if (loading) return (
     <div className="page-layout"><Navbar />
@@ -48,7 +65,11 @@ export default function CaseDetail() {
   const { case: c, extraction, urgency } = data;
   const actionPlan = extraction?.action_plan || {};
   const sourceRefs = extraction?.source_references || {};
-  const pdfUrl = c.pdf_path ? `${API_BASE}/${c.pdf_path}` : null;
+  const pdfUrl = c.pdf_url
+    ? (c.pdf_url.startsWith('http')
+        ? c.pdf_url
+        : `${API_BASE}${c.pdf_url.startsWith('/') ? '' : '/'}${c.pdf_url}`)
+    : (c.pdf_path ? `${API_BASE}/${c.pdf_path}` : null);
 
   return (
     <div className="page-layout animate-in">
@@ -56,9 +77,17 @@ export default function CaseDetail() {
       <div className="case-detail-layout animate-in delay-1">
         {/* Left info panel */}
         <div className="case-detail-info">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            <ArrowLeft size={15} /> Back to Dashboard
-          </button>
+          <div className="flex justify-between items-center mb-6">
+            <button className="back-btn" onClick={() => navigate(-1)}>
+              <ArrowLeft size={15} /> Back
+            </button>
+            <button 
+              onClick={handleDownloadPDF}
+              className="bg-white text-black px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-neutral-200 transition-colors"
+            >
+              <Download size={14} /> Download PDF
+            </button>
+          </div>
           <div className="detail-header">
             <div className="detail-title-row">
               <h1 className="detail-case-num">{c.case_number || `Case #${c.id}`}</h1>

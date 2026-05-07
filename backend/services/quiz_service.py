@@ -2,8 +2,9 @@
 services/quiz_service.py
 Generate 5 quiz questions from extraction data. Store AI answers in DB (never sent pre-submission).
 """
-import json
-from database.db import get_connection
+from datetime import datetime
+
+from database.mongo import get_db
 
 QUESTIONS = [
     "What is the final order — compliance or dismissed?",
@@ -13,25 +14,37 @@ QUESTIONS = [
     "What is the key directive of the court in one line?",
 ]
 
-def generate_questions(case_id: int, extraction: dict) -> list:
-    """Map extraction fields to 5 fixed questions and store with AI answers."""
+async def generate_questions(case_id: str, extraction: dict) -> list:
+    """Map extraction fields to 5 fixed questions and store with AI answers in MongoDB."""
+    db = get_db()
     ai_answers = [
         extraction.get("action_plan", {}).get("recommendation", ""),
-        extraction.get("responsible_department", ""),
+        extraction.get("responsible_dept", ""),
         extraction.get("compliance_deadline", ""),
         extraction.get("appeal_window", ""),
         extraction.get("key_directions", ""),
     ]
-    conn = get_connection()
-    # Clear old questions for this case
-    conn.execute("DELETE FROM quiz_questions WHERE case_id = ?", (case_id,))
+
+    # Replace old questions for this case
+    await db.quiz_questions.delete_many({"case_id": case_id})
+
+    docs = []
     stored = []
+    now = datetime.utcnow()
     for i, (q, a) in enumerate(zip(QUESTIONS, ai_answers)):
-        cursor = conn.execute(
-            "INSERT INTO quiz_questions (case_id, question_text, correct_answer, question_order) VALUES (?,?,?,?)",
-            (case_id, q, a, i+1)
+        docs.append(
+            {
+                "case_id": case_id,
+                "question_text": q,
+                "correct_answer": a,
+                "question_order": i + 1,
+                "created_at": now,
+            }
         )
-        stored.append({"id": cursor.lastrowid, "question_order": i+1, "question_text": q})
-    conn.commit()
-    conn.close()
+
+    if docs:
+        res = await db.quiz_questions.insert_many(docs)
+        for oid, doc in zip(res.inserted_ids, docs):
+            stored.append({"id": str(oid), "question_order": doc["question_order"], "question_text": doc["question_text"]})
+
     return stored

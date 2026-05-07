@@ -38,6 +38,11 @@ REGION="${CLOUD_RUN_REGION:-us-central1}"
 SERVICE_NAME="lexflow-api"
 IMAGE_NAME="gcr.io/$FIREBASE_PROJECT_ID/$SERVICE_NAME"
 
+STORAGE_ENV=""
+if [ -n "${FIREBASE_STORAGE_BUCKET:-}" ]; then
+  STORAGE_ENV=",FIREBASE_STORAGE_BUCKET=$FIREBASE_STORAGE_BUCKET"
+fi
+
 echo "==> Deploying frontend to Firebase Hosting"
 cd "$ROOT_DIR/frontend"
 npm install
@@ -63,7 +68,7 @@ gcloud run deploy "$SERVICE_NAME" \
   --platform managed \
   --region "$REGION" \
   --allow-unauthenticated \
-  --set-env-vars "GROQ_API_KEY=$GROQ_API_KEY,JWT_SECRET=$JWT_SECRET"
+  --set-env-vars "GROQ_API_KEY=$GROQ_API_KEY,JWT_SECRET=$JWT_SECRET,ENVIRONMENT=production,FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID${STORAGE_ENV}"
 
 echo "\nDeployment complete!"
 echo "Frontend: https://$(firebase hosting:sites:get | tail -n1)"

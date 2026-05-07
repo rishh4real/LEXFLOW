@@ -89,33 +89,27 @@ lexflow/
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Deployment (Hackathon-friendly: MongoDB Atlas + any hosting)
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- Groq API key (free at [console.groq.com](https://console.groq.com))
+Backend now uses:
+- **MongoDB Atlas (free tier)** for data storage
+- **MongoDB GridFS** for PDF storage (no separate bucket required)
 
-### Backend Setup
+### Required environment variables (Backend)
+Set these on whichever platform you deploy the backend to (Render/Railway/Fly.io/VM/etc):
+
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+export MONGODB_URI="mongodb+srv://<user>:<pass>@<cluster>/<optional>?retryWrites=true&w=majority"
+export MONGODB_DB_NAME="lexflow"
+export GROQ_API_KEY="your-groq-key"
+export JWT_SECRET="your-jwt-secret"
 ```
-Create a `.env` file in `backend/`:
-```env
-GROQ_API_KEY=your_key_here
-JWT_SECRET=your_secret_here
-```
-Run: `uvicorn main:app --reload`
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
+### MongoDB Atlas setup (free)
+1. Create a free Atlas cluster at `https://cloud.mongodb.com`
+2. Create a DB user + password
+3. Network Access: allow `0.0.0.0/0` (hackathon demo)
+4. Copy the Python driver connection string and use it as `MONGODB_URI`
 
 ### One-Command Launch
 From the repository root:
@@ -149,53 +143,9 @@ To stop the containers:
 docker compose down
 ```
 
-### Firebase + Cloud Run Deployment
-To deploy the frontend on Firebase Hosting and backend on Cloud Run:
-1. Install the Firebase CLI and Google Cloud SDK.
-2. Create or select a Firebase project.
-3. Set your Firebase project in `.firebaserc`:
-   ```json
-   {
-     "projects": {
-       "default": "YOUR_FIREBASE_PROJECT_ID"
-     }
-   }
-   ```
-4. Set environment variables:
-   ```bash
-   export FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
-   export GROQ_API_KEY=your_groq_api_key
-   export JWT_SECRET=your_jwt_secret
-   ```
-5. Run the deploy script from the repository root:
-   ```bash
-   chmod +x deploy_firebase.sh
-   ./deploy_firebase.sh
-   ```
-6. If you prefer manual deploy steps, use:
-   ```bash
-   cd frontend
-   npm install
-   npm run build
-   firebase deploy --only hosting
-
-   cd ../backend
-   gcloud auth login
-   gcloud config set project "$FIREBASE_PROJECT_ID"
-   gcloud builds submit --tag gcr.io/$FIREBASE_PROJECT_ID/lexflow-api
-   gcloud run deploy lexflow-api \
-     --image gcr.io/$FIREBASE_PROJECT_ID/lexflow-api \
-     --platform managed \
-     --region us-central1 \
-     --allow-unauthenticated \
-     --set-env-vars GROQ_API_KEY=$GROQ_API_KEY,JWT_SECRET=$JWT_SECRET
-   ```
-7. In `firebase.json`, ensure the Cloud Run rewrite points to the service name `lexflow-api` and region `us-central1`.
-
 #### Notes
-- Frontend API calls are routed through `/api/...` when hosted on Firebase.
-- In local development, the app still uses `http://localhost:10000` for the backend.
-- Replace `YOUR_FIREBASE_PROJECT_ID` and env values with your real project settings.
+- Frontend API base URL is controlled by `VITE_API_URL` (see `frontend/src/api/client.js`)
+- PDFs are served from the backend via `GET /files/{file_id}`
 
 ---
 

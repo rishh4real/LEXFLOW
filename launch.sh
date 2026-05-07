@@ -27,7 +27,7 @@ FRONTEND_LOG="$WORKDIR/frontend.log"
 cd "$WORKDIR/backend"
 echo "\n3) Starting backend on http://localhost:10000"
 source venv/bin/activate
-uvicorn main:app --host 0.0.0.0 --port 10000 --reload >"$BACKEND_LOG" 2>&1 &
+uvicorn main:app --host 0.0.0.0 --port 10000 --reload --reload-exclude "venv/*" >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 
 cd "$WORKDIR/frontend"

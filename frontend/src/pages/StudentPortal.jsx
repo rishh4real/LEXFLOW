@@ -35,6 +35,7 @@ export default function StudentPortal() {
     try {
       const { data } = await client.get('/cases/');
       setCases(data);
+      setError('');
     } catch {
       setError('Failed to load cases.');
     } finally {
@@ -92,7 +93,11 @@ export default function StudentPortal() {
   };
 
   const pdfUrl = selectedCase
-    ? `${API_BASE}/${selectedCase.pdf_path}`
+    ? selectedCase.pdf_url
+      ? (selectedCase.pdf_url.startsWith('http')
+          ? selectedCase.pdf_url
+          : `${API_BASE}${selectedCase.pdf_url.startsWith('/') ? '' : '/'}${selectedCase.pdf_url}`)
+      : (selectedCase.pdf_path ? `${API_BASE}/${selectedCase.pdf_path}` : null)
     : null;
 
   return (
@@ -108,18 +113,6 @@ export default function StudentPortal() {
               <button className="icon-btn" onClick={fetchCases} title="Refresh">
                 <RefreshCw size={15} />
               </button>
-              <label className="upload-btn" title="Upload PDF">
-                {uploading ? <Loader2 size={15} className="spin" /> : <Upload size={15} />}
-                <span>{uploading ? 'Uploading…' : 'Upload PDF'}</span>
-                <input
-                  id="pdf-upload-input"
-                  type="file"
-                  accept=".pdf"
-                  className="hidden"
-                  onChange={handleUpload}
-                  disabled={uploading}
-                />
-              </label>
             </div>
           </div>
 
@@ -134,7 +127,7 @@ export default function StudentPortal() {
             ) : cases.length === 0 ? (
               <div className="list-empty">
                 <p>No cases yet.</p>
-                <p className="text-sm text-neutral-500">Upload a court PDF to get started.</p>
+                <p className="text-sm text-neutral-500">Wait for Admin to assign or upload cases.</p>
               </div>
             ) : (
               cases.map((c) => (

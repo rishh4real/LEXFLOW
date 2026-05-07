@@ -44,7 +44,10 @@ export default function Login() {
       login(data.access_token, data.user);
       navigate(ROLE_REDIRECTS[data.user.role] || '/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed. Check credentials.');
+      const message = err.code === 'ECONNABORTED'
+        ? 'Backend is not responding. Please check that the API server is running.'
+        : err.response?.data?.detail || 'Login failed. Check credentials.';
+      setError(message);
     } finally {
       setLoading(false);
     }

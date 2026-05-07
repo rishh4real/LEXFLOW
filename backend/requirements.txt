@@ -12,3 +12,5 @@ thefuzz
 python-Levenshtein
 python-dotenv
 aiofiles
+fpdf2
+motor

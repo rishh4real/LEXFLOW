@@ -17,7 +17,8 @@ from jose import JWTError, jwt
 import bcrypt
 from dotenv import load_dotenv
 
-from database.db import get_connection
+from bson import ObjectId
+from database.mongo import get_db
 
 load_dotenv()
 
@@ -25,6 +26,30 @@ load_dotenv()
 SECRET_KEY = os.getenv("JWT_SECRET", "change-me-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
+
+DEMO_USERS = {
+    "admin@lexflow.com": {
+        "id": "000000000000000000000001",
+        "name": "Admin User",
+        "email": "admin@lexflow.com",
+        "password": "admin123",
+        "role": "admin",
+    },
+    "student@lexflow.com": {
+        "id": "000000000000000000000002",
+        "name": "Law Student",
+        "email": "student@lexflow.com",
+        "password": "student123",
+        "role": "student",
+    },
+    "official@lexflow.com": {
+        "id": "000000000000000000000003",
+        "name": "Govt Official",
+        "email": "official@lexflow.com",
+        "password": "official123",
+        "role": "official",
+    },
+}
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 bearer_scheme = HTTPBearer()
@@ -41,11 +66,11 @@ def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
 
 
-def create_access_token(user_id: int, email: str, role: str) -> str:
+def create_access_token(user_id: str, email: str, role: str) -> str:
     """
     Build a signed JWT token containing:
       sub  = user email
-      id   = user id
+      id   = user id (string)
       role = user role (admin | student | official)
       exp  = expiry timestamp
     """
@@ -84,19 +109,27 @@ def get_current_user(
 
 
 # ── Login helper ───────────────────────────────────────────────────────────────
-def authenticate_user(email: str, password: str) -> Optional[dict]:
+async def authenticate_user(email: str, password: str) -> Optional[dict]:
     """
-    Look up user by email, verify password.
-    Returns user row dict on success, None on failure.
+    Look up user by email in MongoDB, verify password.
+    Returns user data on success, None on failure.
     """
-    conn = get_connection()
-    row = conn.execute(
-        "SELECT * FROM users WHERE email = ?", (email,)
-    ).fetchone()
-    conn.close()
+    db = get_db()
+    try:
+        user_doc = await db.users.find_one({"email": email})
+    except Exception:
+        demo = DEMO_USERS.get(email)
+        if demo and demo["password"] == password:
+            return {key: value for key, value in demo.items() if key != "password"}
+        return None
 
-    if not row:
+    if not user_doc:
         return None
-    if not verify_password(password, row["password_hash"]):
+
+    user_data = dict(user_doc)
+    user_data["id"] = str(user_data.pop("_id"))
+
+    if not verify_password(password, user_data["password_hash"]):
         return None
-    return dict(row)
+    
+    return user_data

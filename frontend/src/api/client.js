@@ -16,6 +16,7 @@ const API_BASE =
 const client = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 8000,
 });
 
 // ── Request interceptor: attach JWT token ─────────────────────────────────────
@@ -23,6 +24,10 @@ client.interceptors.request.use((config) => {
   const token = localStorage.getItem('lf_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  // Don't override Content-Type for multipart/form-data (let axios handle it)
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
   }
   return config;
 });
