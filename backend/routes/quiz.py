@@ -20,6 +20,7 @@ from database.mongo import get_db
 from auth.auth import get_current_user
 from auth.roles import require_student
 from services.confidence import score_answers
+from services.quiz_service import generate_questions
 
 router = APIRouter(prefix="/quiz", tags=["Quiz"])
 
@@ -27,6 +28,15 @@ router = APIRouter(prefix="/quiz", tags=["Quiz"])
 # ── Request body schema ───────────────────────────────────────────────────────
 class SubmitAnswers(BaseModel):
     answers: dict[str, str]  # { question_id: student_answer_text }
+
+
+def has_generic_questions(questions: list[dict]) -> bool:
+    if not questions:
+        return False
+    return any(
+        not (q.get("question_text") or "").startswith("For ")
+        for q in questions
+    )
 
 
 # ── Get Questions ─────────────────────────────────────────────────────────────
@@ -38,7 +48,7 @@ async def get_questions(case_id: str, current_user: dict = Depends(get_current_u
     """
     if case_id in local_store.cases:
         questions = local_store.public_questions(case_id)
-        if not questions and case_id in local_store.extractions:
+        if (not questions or has_generic_questions(questions)) and case_id in local_store.extractions:
             questions = local_store.create_questions(case_id, local_store.extractions[case_id])
         return questions
 
@@ -60,6 +70,13 @@ async def get_questions(case_id: str, current_user: dict = Depends(get_current_u
             "question_order": d["question_order"],
             "question_text": d["question_text"]
         })
+
+    if not results or has_generic_questions(results):
+        extraction_doc = await db.extractions.find_one({"case_id": case_id})
+        if extraction_doc:
+            extraction_data = dict(extraction_doc)
+            extraction_data.pop("_id", None)
+            results = await generate_questions(case_id, extraction_data)
 
     return results
 

@@ -44,6 +44,7 @@ export default function StudentPortal() {
   // When a case is selected, load its quiz questions
   const selectCase = async (c) => {
     setSelectedCase(c);
+    setQuestions([]);
     setHighlightPage(null);
     try {
       const { data } = await client.get(`/quiz/${c.id}`);
