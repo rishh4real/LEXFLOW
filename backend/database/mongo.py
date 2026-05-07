@@ -10,6 +10,7 @@ Env vars:
 
 import os
 
+import certifi
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorGridFSBucket
 from dotenv import load_dotenv
 
@@ -26,7 +27,11 @@ def get_client() -> AsyncIOMotorClient:
         uri = os.getenv("MONGODB_URI")
         if not uri:
             raise RuntimeError("MONGODB_URI is not set")
-        _client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=5000)
+        _client = AsyncIOMotorClient(
+            uri,
+            serverSelectionTimeoutMS=5000,
+            tlsCAFile=certifi.where(),
+        )
     return _client
 
 

@@ -15,6 +15,7 @@ from datetime import datetime
 from typing import Optional, List
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from database.mongo import get_db, ensure_indexes
@@ -232,6 +233,18 @@ def chat_assistant(body: ChatRequest, current_user: dict = Depends(get_current_u
 @app.get("/health", tags=["System"])
 def health():
     return {"status": "ok", "service": "LexFlow API"}
+
+
+@app.get("/health/db", tags=["System"])
+async def health_db():
+    try:
+        await get_db().command("ping")
+        return {"status": "ok", "database": "connected"}
+    except Exception as exc:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "error", "database": "unavailable", "detail": str(exc)[:500]},
+        )
 
 # ── User Management ───────────────────────────────────────────────────────────
 @app.get("/admin/users", tags=["Admin"])
