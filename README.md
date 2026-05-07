@@ -48,6 +48,14 @@ Most systems ask a human to approve/reject AI output while showing them the AI's
 
 ---
 
+## 🌐 Live Demo
+
+- **App:** https://lexflow-beta.vercel.app
+- **Backend API:** https://lexflow-1-k5cc.onrender.com
+- **Database health:** https://lexflow-1-k5cc.onrender.com/health/db
+
+---
+
 ## 🗂️ Project Structure
 
 ```bash
@@ -55,11 +63,13 @@ lexflow/
 ├── backend/
 │   ├── main.py                  # FastAPI entry point
 │   ├── database/
-│   │   ├── db.py                # SQLite connection & schemas
+│   │   ├── mongo.py             # MongoDB Atlas + GridFS connection
+│   │   ├── local_store.py       # Local development fallback store
 │   ├── routes/
 │   │   ├── cases.py             # Upload PDF, list cases
 │   │   ├── extraction.py        # Trigger AI extraction (Groq)
 │   │   ├── quiz.py              # Quiz questions + scoring
+│   │   ├── files.py             # Serve stored PDFs
 │   ├── services/
 │   │   ├── pdf_parser.py        # pdfplumber + OCR fallback
 │   │   ├── llm_service.py       # Groq LLaMA 3.3 API logic
@@ -80,7 +90,8 @@ lexflow/
 | Layer | Technology |
 |-------|------------|
 | **Backend** | Python, FastAPI |
-| **Database** | SQLite |
+| **Database** | MongoDB Atlas |
+| **PDF Storage** | MongoDB GridFS |
 | **AI Model** | Groq API (llama-3.3-70b-versatile) |
 | **PDF Engine** | pdfplumber, pytesseract (OCR) |
 | **Matching** | thefuzz (Fuzzy string matching) |
@@ -89,30 +100,40 @@ lexflow/
 
 ---
 
-## 🚀 Deployment (Hackathon-friendly: MongoDB Atlas + any hosting)
+## 🚀 Deployment
 
-Backend now uses:
-- **MongoDB Atlas (free tier)** for data storage
-- **MongoDB GridFS** for PDF storage (no separate bucket required)
+The frontend is deployed on **Vercel** and the backend is deployed on **Render**.
 
-### Required environment variables (Backend)
-Set these on whichever platform you deploy the backend to (Render/Railway/Fly.io/VM/etc):
+### Backend Environment Variables
+Set these on the Render backend service:
 
 ```bash
-export MONGODB_URI="mongodb+srv://<user>:<pass>@<cluster>/<optional>?retryWrites=true&w=majority"
-export MONGODB_DB_NAME="lexflow"
-export GROQ_API_KEY="your-groq-key"
-export JWT_SECRET="your-jwt-secret"
+MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/<optional>?retryWrites=true&w=majority
+MONGODB_DB_NAME=lexflow
+GROQ_API_KEY=your-groq-key
+JWT_SECRET=your-jwt-secret
+ENVIRONMENT=production
 ```
 
-### MongoDB Atlas setup (free)
+### MongoDB Atlas Setup
 1. Create a free Atlas cluster at `https://cloud.mongodb.com`
 2. Create a DB user + password
 3. Network Access: allow `0.0.0.0/0` (hackathon demo)
 4. Copy the Python driver connection string and use it as `MONGODB_URI`
+5. Confirm deployment health at `https://lexflow-1-k5cc.onrender.com/health/db`
 
-### One-Command Launch
+### Frontend Environment
+The frontend API base URL is controlled by `VITE_API_URL`.
+
+For production, point it to:
+
+```bash
+VITE_API_URL=https://lexflow-1-k5cc.onrender.com
+```
+
+### Local Development
 From the repository root:
+
 ```bash
 chmod +x launch.sh
 ./launch.sh
@@ -124,28 +145,9 @@ This script will:
 - start the backend on `http://localhost:10000`
 - start the frontend on `http://localhost:5173`
 
-### Docker Deployment
-If you want a containerized deployment, use Docker Compose.
-1. Copy `.env.example` to `.env` and update your keys:
-   ```bash
-   cp .env.example .env
-   ```
-2. Build and start both services:
-   ```bash
-   docker compose up --build -d
-   ```
-3. Visit:
-   - frontend: `http://localhost:5173`
-   - backend: `http://localhost:10000`
-
-To stop the containers:
-```bash
-docker compose down
-```
-
 #### Notes
-- Frontend API base URL is controlled by `VITE_API_URL` (see `frontend/src/api/client.js`)
 - PDFs are served from the backend via `GET /files/{file_id}`
+- If MongoDB is unavailable locally, the backend can use a disk-backed fallback store for development.
 
 ---
 
