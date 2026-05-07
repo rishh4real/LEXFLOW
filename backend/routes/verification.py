@@ -74,8 +74,21 @@ async def list_flagged(current_user: dict = Depends(require_admin)):
         if case.get("status") == "flagged":
             case_data = local_store.serialize_case(case)
             case_data.update(local_store.serialize_extraction(local_store.extractions.get(case["id"], {})))
-            case_data["student_name"] = "Local upload"
-            case_data["match_score"] = 0
+            # Resolve uploader info — local cases are always admin-uploaded
+            uploader_id = case.get("uploaded_by")
+            uploader = local_store.users.get(uploader_id) if uploader_id else None
+            submission = local_store.latest_submission(case["id"])
+            if submission:
+                student = local_store.users.get(submission.get("student_id"), {})
+                case_data["student_name"] = student.get("name", "Student submission")
+                case_data["student_email"] = student.get("email")
+                case_data["match_score"] = submission.get("match_score", 0)
+                case_data["submitted_at"] = local_store.serialize_submission(submission).get("submitted_at")
+            else:
+                case_data["student_name"] = "Awaiting student"
+                case_data["match_score"] = 0
+            case_data["uploaded_by_name"] = uploader.get("name", "Admin") if uploader else "Admin"
+            case_data["uploaded_by_role"] = uploader.get("role", "admin") if uploader else "admin"
             results.append(case_data)
 
     return results
@@ -93,8 +106,9 @@ async def verification_detail(case_id: str, current_user: dict = Depends(require
             "case": local_store.serialize_case(case),
             "extraction": local_store.serialize_extraction(local_store.extractions[case_id])
             if case_id in local_store.extractions else None,
-            "submission": None,
-            "questions": [],
+            "submission": local_store.serialize_submission(local_store.latest_submission(case_id))
+            if local_store.latest_submission(case_id) else None,
+            "questions": local_store.public_questions(case_id),
         }
 
     db = get_db()
@@ -173,6 +187,7 @@ async def verify_case(
             "flag": "flagged",
         }[body.action]
         local_store.cases[case_id]["status"] = new_status
+        local_store._save()
         return {
             "message": f"Case {body.action}d successfully.",
             "case_id": case_id,

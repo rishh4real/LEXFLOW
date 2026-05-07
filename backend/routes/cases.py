@@ -76,36 +76,78 @@ async def upload_case(
 async def list_cases(current_user: dict = Depends(get_current_user)):
     """
     List cases from MongoDB based on role.
+    Merges extraction data (parties, deadlines, etc.) into each case
+    so the frontend gets complete info for display.
     """
     role = current_user["role"]
 
+    # Students see ALL cases (admin uploads cases for students to study)
+    # Officials only see verified cases
+    # Admins see everything
     q: dict = {}
-    if role == "student":
-        q["uploaded_by"] = ObjectId(current_user["id"])
-    elif role != "admin":  # official
+    if role == "official":
         q["status"] = "verified"
+    # student and admin: no filter → see all cases
 
     results = []
     try:
         db = get_db()
+
+        # Build a lookup of extraction data keyed by case_id
+        extraction_map: dict = {}
+        async for ext in db.extractions.find():
+            ext_data = dict(ext)
+            cid = ext_data.get("case_id")
+            if cid:
+                extraction_map[cid] = ext_data
+
         async for doc in db.cases.find(q).sort("created_at", -1):
             d = dict(doc)
             d["id"] = str(d.pop("_id"))
-            # Serialize ObjectIds / datetimes
             if d.get("uploaded_by"):
                 d["uploaded_by"] = str(d["uploaded_by"])
+            if d.get("pdf_file_id"):
+                d["pdf_file_id"] = str(d["pdf_file_id"])
             if d.get("created_at") and hasattr(d["created_at"], "isoformat"):
                 d["created_at"] = d["created_at"].isoformat()
+
+            # Merge extraction fields into the case so frontend gets full data
+            ext = extraction_map.get(d["id"])
+            if ext:
+                for field in ("parties", "case_number", "date_of_order",
+                              "key_directions", "compliance_deadline",
+                              "appeal_window", "responsible_dept",
+                              "action_plan", "source_references",
+                              "confidence_score"):
+                    if field in ext and (not d.get(field)):
+                        d[field] = ext[field]
+                # Also include urgency from action_plan
+                if ext.get("action_plan") and isinstance(ext["action_plan"], dict):
+                    d.setdefault("urgency", ext["action_plan"].get("urgency"))
+
             results.append(d)
     except Exception:
         results = []
 
+    # Also include local-store cases (fallback when MongoDB is down)
     for case in local_store.cases.values():
-        if role == "student" and case.get("uploaded_by") != current_user["id"]:
+        # Officials only see verified local cases
+        if role == "official" and case.get("status") != "verified":
             continue
-        if role not in ("admin", "student") and case.get("status") != "verified":
-            continue
-        results.append(local_store.serialize_case(case))
+        serialized = local_store.serialize_case(case)
+        # Merge local extraction data
+        ext = local_store.extractions.get(case.get("id", ""))
+        if ext:
+            for field in ("parties", "case_number", "date_of_order",
+                          "key_directions", "compliance_deadline",
+                          "appeal_window", "responsible_dept",
+                          "action_plan", "source_references",
+                          "confidence_score"):
+                if field in ext and (not serialized.get(field)):
+                    serialized[field] = ext[field]
+            if ext.get("action_plan") and isinstance(ext["action_plan"], dict):
+                serialized.setdefault("urgency", ext["action_plan"].get("urgency"))
+        results.append(serialized)
 
     return results
 

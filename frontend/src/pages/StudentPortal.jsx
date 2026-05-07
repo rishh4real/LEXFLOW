@@ -2,17 +2,16 @@
  * pages/StudentPortal.jsx
  * ───────────────────────
  * Main page for law students.
- * Layout: Left panel (PDF viewer) | Right panel (Quiz)
+ * Layout: Left panel (case list) | Centre (PDF viewer) | Right panel (Quiz)
  * Flow:
- *  1. Student selects / uploads a case PDF
- *  2. PDF renders on left
+ *  1. Admin uploads a case → it appears here automatically
+ *  2. Student picks a case → PDF renders on left
  *  3. 5 quiz questions appear on right
  *  4. On submission: match score shown, AI answers revealed
- *  5. Clicking a result highlights the source page in PDF
  */
 
 import { useState, useEffect } from 'react';
-import { Upload, Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import PDFViewer from '../components/PDFViewer';
 import QuizPanel from '../components/QuizPanel';
@@ -26,7 +25,6 @@ export default function StudentPortal() {
   const [selectedCase, setSelectedCase] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [highlightPage, setHighlightPage] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [loadingCases, setLoadingCases] = useState(true);
   const [error, setError] = useState('');
 
@@ -43,12 +41,9 @@ export default function StudentPortal() {
     }
   }
 
-  // Load student's cases on mount
-  useEffect(() => {
-    fetchCases();
-  }, []);
+  useEffect(() => { fetchCases(); }, []);
 
-  // When a case is selected, load its questions
+  // When a case is selected, load its quiz questions
   const selectCase = async (c) => {
     setSelectedCase(c);
     setHighlightPage(null);
@@ -60,36 +55,8 @@ export default function StudentPortal() {
     }
   };
 
-  // Upload a new PDF
-  const handleUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    setError('');
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const { data: uploaded } = await client.post('/cases/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      // Trigger extraction immediately after upload
-      await client.post(`/extract/${uploaded.case_id}`);
-
-      // Refresh case list
-      await fetchCases();
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Upload failed.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // After quiz submitted, optionally jump PDF to a source page
   const handleQuizSubmitted = () => {
-    // In Phase 6 we map source references to page numbers
-    // For now: no page jump
+    // After submission, admin sees the flagged case with comparison view
   };
 
   const pdfUrl = selectedCase
@@ -126,8 +93,8 @@ export default function StudentPortal() {
               </div>
             ) : cases.length === 0 ? (
               <div className="list-empty">
-                <p>No cases yet.</p>
-                <p className="text-sm text-neutral-500">Wait for Admin to assign or upload cases.</p>
+                <p>No cases assigned yet.</p>
+                <p className="text-sm text-neutral-500">Admin will upload cases for you to study.</p>
               </div>
             ) : (
               cases.map((c) => (

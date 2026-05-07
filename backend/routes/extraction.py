@@ -32,6 +32,8 @@ async def trigger_extraction(case_id: str, current_user: dict = Depends(get_curr
     local_case = local_store.cases.get(case_id)
     if local_case:
         if case_id in local_store.extractions:
+            if not local_store.public_questions(case_id):
+                local_store.create_questions(case_id, local_store.extractions[case_id])
             return {"message": "Extraction already exists.", "case_id": case_id}
 
         raw_text = ""
@@ -62,9 +64,11 @@ async def trigger_extraction(case_id: str, current_user: dict = Depends(get_curr
                 "created_at": datetime.utcnow(),
             }
             local_store.extractions[case_id] = extraction_data
-            local_case.update({"case_number": extraction_data["case_number"], "status": "flagged"})
+            local_case.update({"case_number": extraction_data["case_number"], "status": "pending"})
         else:
             extraction_data = local_store.build_fallback_extraction(case_id, raw_text)
+
+        local_store.create_questions(case_id, extraction_data)
 
         return {
             "message": "Extraction complete.",

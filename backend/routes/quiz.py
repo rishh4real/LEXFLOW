@@ -15,6 +15,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from database import local_store
 from database.mongo import get_db
 from auth.auth import get_current_user
 from auth.roles import require_student
@@ -35,6 +36,12 @@ async def get_questions(case_id: str, current_user: dict = Depends(get_current_u
     Return the 5 quiz questions for a case from MongoDB.
     IMPORTANT: correct_answer is NEVER included in this response.
     """
+    if case_id in local_store.cases:
+        questions = local_store.public_questions(case_id)
+        if not questions and case_id in local_store.extractions:
+            questions = local_store.create_questions(case_id, local_store.extractions[case_id])
+        return questions
+
     db = get_db()
     try:
         case_oid = ObjectId(case_id)
@@ -69,6 +76,28 @@ async def submit_answers(
     Uses confidence.py fuzzy matching.
     Returns match_score (0-100) and per-question breakdown.
     """
+    if case_id in local_store.cases:
+        student_id = current_user["id"]
+        if local_store.submission_for(case_id, student_id):
+            raise HTTPException(status_code=400, detail="Quiz already submitted for this case.")
+
+        questions = local_store.questions.get(case_id, [])
+        if not questions:
+            raise HTTPException(status_code=400, detail="No questions found for this case.")
+
+        ai_answers = {q["id"]: q.get("correct_answer", "") for q in questions}
+        scoring_result = score_answers(body.answers, ai_answers)
+        submission = local_store.save_submission(case_id, student_id, body.answers, scoring_result)
+
+        return {
+            "match_score": round(scoring_result["match_score"], 1),
+            "status": scoring_result["status"],
+            "breakdown": scoring_result["breakdown"],
+            "ai_answers": ai_answers,
+            "message": "Answers submitted successfully.",
+            "submission": local_store.serialize_submission(submission),
+        }
+
     db = get_db()
     student_oid = ObjectId(current_user["id"])
 
@@ -105,11 +134,7 @@ async def submit_answers(
     try:
         await db.quiz_submissions.insert_one(submission_data)
 
-        # If flagged, update case status to 'flagged' (needs official review)
-        # If score is high, and no existing 'verified' status, we might keep 'pending' 
-        # but here we update status based on student performance if it indicates discrepancy.
-        if submission_status == "flagged":
-            await db.cases.update_one({"_id": ObjectId(case_id)}, {"$set": {"status": "flagged"}})
+        await db.cases.update_one({"_id": ObjectId(case_id)}, {"$set": {"status": "flagged"}})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save submission: {str(e)}")
 
@@ -127,6 +152,19 @@ async def get_result(case_id: str, current_user: dict = Depends(get_current_user
     """
     Return quiz result from MongoDB after submission, including AI correct answers.
     """
+    if case_id in local_store.cases:
+        submission = local_store.submission_for(case_id, current_user["id"])
+        if not submission:
+            raise HTTPException(
+                status_code=404, detail="No submission found. Submit your answers first."
+            )
+        result = local_store.serialize_submission(submission)
+        result["ai_answers"] = {
+            q["id"]: q.get("correct_answer", "")
+            for q in local_store.questions.get(case_id, [])
+        }
+        return result
+
     db = get_db()
     student_oid = ObjectId(current_user["id"])
 

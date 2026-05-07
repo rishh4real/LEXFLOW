@@ -140,7 +140,13 @@ export default function AdminPanel() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-bold text-lg">{c.case_number}</h3>
-                    <p className="text-xs text-neutral-400">Student: {c.student_name}</p>
+                    {c.student_name ? (
+                      <p className="text-xs text-neutral-400">Student: {c.student_name}</p>
+                    ) : (
+                      <p className="text-xs text-neutral-500 italic">
+                        Uploaded by {c.uploaded_by_role === 'admin' ? 'Admin' : (c.uploaded_by_name || 'Admin')}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <span className="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
